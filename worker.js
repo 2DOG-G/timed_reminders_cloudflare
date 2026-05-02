@@ -1,5 +1,5 @@
 // worker.js
-// Cloudflare Worker - 多用户提醒推送系统 (注册增强 + 间隔小数修复)
+// Cloudflare Worker - 多用户提醒推送系统 (删除页脚和GitHub按钮，保留右下角悬浮GitHub)
 
 // ---------- 工具函数 ----------
 function bufferToHex(buffer) {
@@ -181,7 +181,7 @@ async function sendPushplus(token, title, content) {
   return res.json();
 }
 
-// ---------- 前端 HTML (注册增强 + 间隔小数修复) ----------
+// ---------- 前端 HTML (删除页脚和多余GitHub按钮) ----------
 const FRONTEND_HTML = `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -207,7 +207,7 @@ const FRONTEND_HTML = `<!DOCTYPE html>
       color: var(--text);
       line-height: 1.6;
     }
-    .container { max-width: 960px; margin: 2rem auto; padding: 0 1.5rem; }
+    .container { max-width: 960px; margin: 2rem auto; padding: 0 1.5rem 4rem; }
     h1 {
       text-align: center;
       font-weight: 800;
@@ -458,17 +458,35 @@ const FRONTEND_HTML = `<!DOCTYPE html>
       to { opacity: 0; visibility: hidden; }
     }
 
-    .footer {
-      margin-top: 2.5rem;
-      border-top: 1px solid var(--gray-border);
-      padding-top: 1.25rem;
-      text-align: center;
-      color: var(--text-light);
-      font-size: 0.9rem;
+    /* 右下角悬浮 GitHub 链接 */
+    .github-corner {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: white;
+      border: 1px solid var(--gray-border);
+      border-radius: 50px;
+      padding: 0.5rem 1.2rem;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      z-index: 99;
+      transition: all 0.2s ease;
+    }
+    .github-corner:hover {
+      background: #f8f8f8;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+      color: var(--red);
+      border-color: var(--red);
     }
 
     @media (max-width: 640px) {
-      .container { padding: 0 1rem; }
+      .container { padding: 0 1rem 4rem; }
       .card { padding: 1.5rem; border-radius: 16px; }
       h1 {
         font-size: 1.5rem;
@@ -483,6 +501,12 @@ const FRONTEND_HTML = `<!DOCTYPE html>
         align-items: flex-start;
       }
       .reminder-label { min-width: auto; margin-bottom: 0.2rem; }
+      .github-corner {
+        bottom: 1rem;
+        right: 1rem;
+        padding: 0.4rem 1rem;
+        font-size: 0.85rem;
+      }
     }
   </style>
 </head>
@@ -586,11 +610,12 @@ const FRONTEND_HTML = `<!DOCTYPE html>
         <button id="create-reminder-btn" style="width:100%">创建提醒</button>
       </div>
     </div>
-
-    <div class="footer">
-      Powered by Deepseek
-    </div>
   </div>
+
+  <!-- 右下角悬浮 GitHub 链接 -->
+  <a href="https://github.com/2DOG-G/timed_reminders_cloudflare" class="github-corner" target="_blank" rel="noopener noreferrer">
+    <span>🐙</span> GitHub
+  </a>
 
   <script>
     let apiToken = localStorage.getItem('api_token') || '';
@@ -739,7 +764,7 @@ const FRONTEND_HTML = `<!DOCTYPE html>
       const dd = String(d.getDate()).padStart(2, '0');
       const hh = String(d.getHours()).padStart(2, '0');
       const min = String(d.getMinutes()).padStart(2, '0');
-      return \`\${yyyy}-\${mm}-\${dd} \${hh}:\${min}\`;
+      return \`\${yyyy}-\${mm}-\${dd} \${hh}-\${min}\`;
     }
 
     function getStatusBadge(status) {
@@ -858,7 +883,7 @@ const FRONTEND_HTML = `<!DOCTYPE html>
             <span class="reminder-value">\${escapeHtml(r.pushplus_note)}</span>
           </div>
           <div class="reminder-actions">
-            \${r.status !== 'completed' ? \`<button class="success" data-id="\${r.id}" onclick="completeReminder(this)">完成</button>\` : ''}
+            \${r.status !== 'completed' ? \`<button class="success" data-id="\${r.id}" onclick="completeReminder(this)">✓ 完成</button>\` : ''}
             <button class="danger" data-id="\${r.id}" onclick="deleteReminder(this)">删除</button>
           </div>
         \`;
@@ -941,38 +966,38 @@ const FRONTEND_HTML = `<!DOCTYPE html>
 </html>`;
 
 // ---------- 主 Worker ----------
-export 默认 {
-  async fetch(request， env) {
-    const url = new URL(request。url);
-    const path = url。pathname;
-    const method = request。method;
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    const path = url.pathname;
+    const method = request.method;
 
-    if (method === 'GET' && path === '/') return textResponse(FRONTEND_HTML， 200， 'text/html; charset=utf-8');
-    if (method === 'POST' && path === '/api/register') return handleRegister(request， env);
-    if (method === 'POST' && path === '/api/login') return handleLogin(request， env);
+    if (method === 'GET' && path === '/') return textResponse(FRONTEND_HTML, 200, 'text/html; charset=utf-8');
+    if (method === 'POST' && path === '/api/register') return handleRegister(request, env);
+    if (method === 'POST' && path === '/api/login') return handleLogin(request, env);
 
-    const userId = await authenticate(request， env);
-    if (!userId) return jsonResponse({ error: '未授权' }， 401);
+    const userId = await authenticate(request, env);
+    if (!userId) return jsonResponse({ error: '未授权' }, 401);
 
-    if (method === 'GET' && path === '/api/tokens') return handleGetTokens(userId， env);
-    if (method === 'POST' && path === '/api/tokens') return handleAddToken(userId， request， env);
+    if (method === 'GET' && path === '/api/tokens') return handleGetTokens(userId, env);
+    if (method === 'POST' && path === '/api/tokens') return handleAddToken(userId, request, env);
 
-    const testTokenMatch = path。match(/^\/api\/tokens\/(\d+)\/test$/);
-    if (method === 'POST' && testTokenMatch) return handleTestToken(userId， testTokenMatch[1]， env);
+    const testTokenMatch = path.match(/^\/api\/tokens\/(\d+)\/test$/);
+    if (method === 'POST' && testTokenMatch) return handleTestToken(userId, testTokenMatch[1], env);
 
-    const tokenMatch = path。match(/^\/api\/tokens\/(\d+)$/);
-    if (method === 'DELETE' && tokenMatch) return handleDeleteToken(userId， tokenMatch[1]， env);
+    const tokenMatch = path.match(/^\/api\/tokens\/(\d+)$/);
+    if (method === 'DELETE' && tokenMatch) return handleDeleteToken(userId, tokenMatch[1], env);
 
-    if (method === 'GET' && path === '/api/reminders') return handleGetReminders(userId， env);
-    if (method === 'POST' && path === '/api/reminders') return handleCreateReminder(userId， request， env);
-    const completeMatch = path。match(/^\/api\/reminders\/(\d+)\/complete$/);
-    if (method === 'PUT' && completeMatch) return handleCompleteReminder(userId， completeMatch[1]， env);
-    const deleteMatch = path。match(/^\/api\/reminders\/(\d+)$/);
-    if (method === 'DELETE' && deleteMatch) return handleDeleteReminder(userId， deleteMatch[1]， env);
+    if (method === 'GET' && path === '/api/reminders') return handleGetReminders(userId, env);
+    if (method === 'POST' && path === '/api/reminders') return handleCreateReminder(userId, request, env);
+    const completeMatch = path.match(/^\/api\/reminders\/(\d+)\/complete$/);
+    if (method === 'PUT' && completeMatch) return handleCompleteReminder(userId, completeMatch[1], env);
+    const deleteMatch = path.match(/^\/api\/reminders\/(\d+)$/);
+    if (method === 'DELETE' && deleteMatch) return handleDeleteReminder(userId, deleteMatch[1], env);
 
-    return new Response('Not Found'， { status: 404 });
-  }，
-  async scheduled(event， env) {
+    return new Response('Not Found', { status: 404 });
+  },
+  async scheduled(event, env) {
     await handleScheduled(env);
   }
 };
