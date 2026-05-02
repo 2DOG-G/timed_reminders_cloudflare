@@ -15,10 +15,10 @@
 
 ## 技术栈
 
-- **运行时**：Cloudflare Workers
+- **运行时**：[Cloudflare Workers](https://dash.cloudflare.com/)
 - **数据库**：Cloudflare D1（SQLite 兼容）;
 - **前端**：原生 HTML/CSS/JS（内嵌于 Worker）;
-- **推送渠道**：Pushplus (pushplus.plus);
+- **推送渠道**：微信服务号[Pushplus](https://www.pushplus.plus/);
 
 ## 注意事项
 - 密码采用简单 SHA-256，无加盐，请勿用于生产环境。
