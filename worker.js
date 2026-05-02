@@ -739,7 +739,7 @@ const FRONTEND_HTML = `<!DOCTYPE html>
       const dd = String(d.getDate()).padStart(2, '0');
       const hh = String(d.getHours()).padStart(2, '0');
       const min = String(d.getMinutes()).padStart(2, '0');
-      return \`\${yyyy}-\${mm}-\${dd} \${hh}-\${min}\`;
+      return \`\${yyyy}-\${mm}-\${dd} \${hh}:\${min}\`;
     }
 
     function getStatusBadge(status) {
@@ -858,7 +858,7 @@ const FRONTEND_HTML = `<!DOCTYPE html>
             <span class="reminder-value">\${escapeHtml(r.pushplus_note)}</span>
           </div>
           <div class="reminder-actions">
-            \${r.status !== 'completed' ? \`<button class="success" data-id="\${r.id}" onclick="completeReminder(this)">✓ 完成</button>\` : ''}
+            \${r.status !== 'completed' ? \`<button class="success" data-id="\${r.id}" onclick="completeReminder(this)">完成</button>\` : ''}
             <button class="danger" data-id="\${r.id}" onclick="deleteReminder(this)">删除</button>
           </div>
         \`;
@@ -941,38 +941,38 @@ const FRONTEND_HTML = `<!DOCTYPE html>
 </html>`;
 
 // ---------- 主 Worker ----------
-export default {
-  async fetch(request, env) {
-    const url = new URL(request.url);
-    const path = url.pathname;
-    const method = request.method;
+export 默认 {
+  async fetch(request， env) {
+    const url = new URL(request。url);
+    const path = url。pathname;
+    const method = request。method;
 
-    if (method === 'GET' && path === '/') return textResponse(FRONTEND_HTML, 200, 'text/html; charset=utf-8');
-    if (method === 'POST' && path === '/api/register') return handleRegister(request, env);
-    if (method === 'POST' && path === '/api/login') return handleLogin(request, env);
+    if (method === 'GET' && path === '/') return textResponse(FRONTEND_HTML， 200， 'text/html; charset=utf-8');
+    if (method === 'POST' && path === '/api/register') return handleRegister(request， env);
+    if (method === 'POST' && path === '/api/login') return handleLogin(request， env);
 
-    const userId = await authenticate(request, env);
-    if (!userId) return jsonResponse({ error: '未授权' }, 401);
+    const userId = await authenticate(request， env);
+    if (!userId) return jsonResponse({ error: '未授权' }， 401);
 
-    if (method === 'GET' && path === '/api/tokens') return handleGetTokens(userId, env);
-    if (method === 'POST' && path === '/api/tokens') return handleAddToken(userId, request, env);
+    if (method === 'GET' && path === '/api/tokens') return handleGetTokens(userId， env);
+    if (method === 'POST' && path === '/api/tokens') return handleAddToken(userId， request， env);
 
-    const testTokenMatch = path.match(/^\/api\/tokens\/(\d+)\/test$/);
-    if (method === 'POST' && testTokenMatch) return handleTestToken(userId, testTokenMatch[1], env);
+    const testTokenMatch = path。match(/^\/api\/tokens\/(\d+)\/test$/);
+    if (method === 'POST' && testTokenMatch) return handleTestToken(userId， testTokenMatch[1]， env);
 
-    const tokenMatch = path.match(/^\/api\/tokens\/(\d+)$/);
-    if (method === 'DELETE' && tokenMatch) return handleDeleteToken(userId, tokenMatch[1], env);
+    const tokenMatch = path。match(/^\/api\/tokens\/(\d+)$/);
+    if (method === 'DELETE' && tokenMatch) return handleDeleteToken(userId， tokenMatch[1]， env);
 
-    if (method === 'GET' && path === '/api/reminders') return handleGetReminders(userId, env);
-    if (method === 'POST' && path === '/api/reminders') return handleCreateReminder(userId, request, env);
-    const completeMatch = path.match(/^\/api\/reminders\/(\d+)\/complete$/);
-    if (method === 'PUT' && completeMatch) return handleCompleteReminder(userId, completeMatch[1], env);
-    const deleteMatch = path.match(/^\/api\/reminders\/(\d+)$/);
-    if (method === 'DELETE' && deleteMatch) return handleDeleteReminder(userId, deleteMatch[1], env);
+    if (method === 'GET' && path === '/api/reminders') return handleGetReminders(userId， env);
+    if (method === 'POST' && path === '/api/reminders') return handleCreateReminder(userId， request， env);
+    const completeMatch = path。match(/^\/api\/reminders\/(\d+)\/complete$/);
+    if (method === 'PUT' && completeMatch) return handleCompleteReminder(userId， completeMatch[1]， env);
+    const deleteMatch = path。match(/^\/api\/reminders\/(\d+)$/);
+    if (method === 'DELETE' && deleteMatch) return handleDeleteReminder(userId， deleteMatch[1]， env);
 
-    return new Response('Not Found', { status: 404 });
-  },
-  async scheduled(event, env) {
+    return new Response('Not Found'， { status: 404 });
+  }，
+  async scheduled(event， env) {
     await handleScheduled(env);
   }
 };
